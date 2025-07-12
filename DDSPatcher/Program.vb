@@ -8,7 +8,7 @@ Module DdsPatcher
     Private ReadOnly POF_MARKER As String = "POF"
 
     Sub Main()
-        Console.WriteLine("DDS 文件修补工具")
+        Console.WriteLine("DDS 文件修补工具 by ChilorXN.")
         Console.WriteLine("使用说明: 源文件路径 修改的DDS路径 DDS序号(从1开始)")
         Console.WriteLine("示例: ""C:\files\model.afb"" ""C:\modified\dds_1.dds"" 1")
         Console.WriteLine("输入 'exit' 退出程序")
