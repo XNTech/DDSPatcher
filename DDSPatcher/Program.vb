@@ -104,9 +104,33 @@ Module DdsPatcher
 
         ' 验证大小
         If modifiedDdsData.Length <> targetDds.Length Then
-            Console.WriteLine($"错误: DDS大小不匹配 (原: {targetDds.Length} 字节, 新: {modifiedDdsData.Length} 字节)")
+            Console.WriteLine($"警告: DDS大小不匹配 (原: {targetDds.Length} 字节, 新: {modifiedDdsData.Length} 字节)")
             Console.WriteLine($"原DDS位置: 文件偏移 0x{targetDds.StartOffset:X8}")
-            Return
+
+            ' 如果新DDS比原DDS小，询问是否强制修补
+            If modifiedDdsData.Length < targetDds.Length Then
+                Console.WriteLine("信息: 检测到新DDS比原DDS小，可尝试使用强制修补")
+                Console.WriteLine("警告: 强制修补可能会导致问题!")
+                Console.WriteLine("是否要使用强制修补? (y/n)")
+                Dim response As String = Console.ReadLine().Trim().ToLower()
+
+                If response <> "y" AndAlso response <> "yes" Then
+                    Console.WriteLine("修补已取消")
+                    Return
+                End If
+
+                ' 二次确认
+                Console.WriteLine("确定要使用强制修补吗? 这可能会破坏文件结构! (yes/no)")
+                Dim confirm As String = Console.ReadLine().Trim().ToLower()
+
+                If confirm <> "yes" Then
+                    Console.WriteLine("修补已取消")
+                    Return
+                End If
+            Else
+                Console.WriteLine("错误: 新DDS比原DDS大，无法修补")
+                Return
+            End If
         End If
 
         ' 创建备份
@@ -117,7 +141,14 @@ Module DdsPatcher
         End If
 
         ' 执行修补
-        Array.Copy(modifiedDdsData, 0, sourceData, targetDds.StartOffset, modifiedDdsData.Length)
+        If modifiedDdsData.Length < targetDds.Length Then
+            ' 仅覆盖修改后的DDS部分，保留剩余部分不变
+            Array.Copy(modifiedDdsData, 0, sourceData, targetDds.StartOffset, modifiedDdsData.Length)
+            Console.WriteLine($"警告: 仅修补了前 {modifiedDdsData.Length} 字节，保留了原DDS的 {targetDds.Length - modifiedDdsData.Length} 字节未修改")
+        Else
+            ' 完全替换
+            Array.Copy(modifiedDdsData, 0, sourceData, targetDds.StartOffset, targetDds.Length)
+        End If
 
         ' 保存修改后的文件
         File.WriteAllBytes(sourceFile, sourceData)
