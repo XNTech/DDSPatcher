@@ -1,12 +1,14 @@
 Imports System
 Imports System.IO
 Imports System.Text
+Imports System.Threading
 
 Module DdsPatcher
     ' DDS 文件头标识
     Private ReadOnly DDS_HEADER As Byte() = {&H44, &H44, &H53, &H20} ' "DDS "
     Private ReadOnly POF_MARKER As String = "POF"
     Private autoPatchMode As Boolean = False
+    Private ignoreWarn As Boolean = False
 
     Sub Main()
         Console.ForegroundColor = ConsoleColor.DarkCyan
@@ -23,6 +25,10 @@ Module DdsPatcher
         While True
             Console.WriteLine()
             If autoPatchMode Then
+                If Not ignoreWarn Then
+                    Console.ForegroundColor = ConsoleColor.DarkYellow
+                    Console.WriteLine("已启用自动修补模式，将跳过确认直接进行强制修补！若您没有使用该功能的必要，请使用 'DisableAutoPatch' 关闭该功能")
+                End If
                 Console.ForegroundColor = ConsoleColor.Red
             Else
                 Console.ForegroundColor = ConsoleColor.Green
@@ -47,6 +53,40 @@ Module DdsPatcher
                     Console.ForegroundColor = ConsoleColor.Green
                     Console.WriteLine("已停用自动修补模式，将恢复二次确认流程")
                     Console.ForegroundColor = ConsoleColor.White
+                    Continue While
+                Case "ignorewarn"
+                    ignoreWarn = True
+                    Console.ForegroundColor = ConsoleColor.Red
+                    Console.WriteLine("已启用忽略警告功能，此次使用将不会再次出现自动修补模式的提示！按下Enter前请再三确认！！！")
+                    Console.ForegroundColor = ConsoleColor.DarkYellow
+                    Console.WriteLine("如需退出，请输入 'Reset' 或重启程序")
+                    Console.ForegroundColor = ConsoleColor.White
+                    Continue While
+                Case "clear"
+                    Console.Clear()
+                    Continue While
+                Case "reset"
+                    autoPatchMode = False
+                    ignoreWarn = False
+                    Console.ForegroundColor = ConsoleColor.DarkCyan
+                    Console.WriteLine("设置已重置，将在3秒后清屏...")
+                    Console.ForegroundColor = ConsoleColor.White
+                    Thread.Sleep(3000)
+                    Console.Clear()
+                    Continue While
+                Case "help"
+                    Console.ForegroundColor = ConsoleColor.DarkCyan
+                    Console.WriteLine("DDS 文件修补工具 by ChilorXN.")
+                    Console.ForegroundColor = ConsoleColor.DarkYellow
+                    Console.WriteLine("使用说明: 源文件路径 修改的DDS路径 DDS序号(从1开始)")
+                    Console.WriteLine("示例: ""C:\files\model.afb"" ""C:\modified\dds_1.dds"" 1")
+                    Console.ForegroundColor = ConsoleColor.White
+                    Console.WriteLine("输入 'EnableAutoPatch' 跳过二次确认")
+                    Console.WriteLine("输入 'DisableAutoPatch' 恢复二次确认")
+                    Console.WriteLine("输入 'clear' 清空屏幕")
+                    Console.WriteLine("输入 'reset' 重置设定")
+                    Console.WriteLine("输入 'help' 再次查看帮助")
+                    Console.WriteLine("输入 'exit' 退出程序")
                     Continue While
             End Select
 
