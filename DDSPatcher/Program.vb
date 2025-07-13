@@ -9,9 +9,12 @@ Module DdsPatcher
     Private autoPatchMode As Boolean = False
 
     Sub Main()
+        Console.ForegroundColor = ConsoleColor.DarkCyan
         Console.WriteLine("DDS 文件修补工具 by ChilorXN.")
+        Console.ForegroundColor = ConsoleColor.DarkYellow
         Console.WriteLine("使用说明: 源文件路径 修改的DDS路径 DDS序号(从1开始)")
         Console.WriteLine("示例: ""C:\files\model.afb"" ""C:\modified\dds_1.dds"" 1")
+        Console.ForegroundColor = ConsoleColor.White
         Console.WriteLine("输入 'EnableAutoPatch' 跳过二次确认")
         Console.WriteLine("输入 'DisableAutoPatch' 恢复二次确认")
         Console.WriteLine("输入 'exit' 退出程序")
@@ -19,7 +22,13 @@ Module DdsPatcher
         ' 持续处理循环
         While True
             Console.WriteLine()
-            Console.WriteLine($"当前模式: {(If(autoPatchMode, "自动修补模式（跳过二次确认）", "正常模式"))}")
+            If autoPatchMode Then
+                Console.ForegroundColor = ConsoleColor.Red
+            Else
+                Console.ForegroundColor = ConsoleColor.Green
+            End If
+            Console.Write($"[{(If(autoPatchMode, "自动修补模式", "正常模式"))}]")
+            Console.ForegroundColor = ConsoleColor.White
             Console.Write("> ")
             Dim input As String = Console.ReadLine()
 
@@ -29,11 +38,15 @@ Module DdsPatcher
                     Exit While
                 Case "enableautopatch"
                     autoPatchMode = True
+                    Console.ForegroundColor = ConsoleColor.Red
                     Console.WriteLine("已启用自动修补模式，将跳过确认直接进行强制修补！")
+                    Console.ForegroundColor = ConsoleColor.White
                     Continue While
                 Case "disableautopatch"
                     autoPatchMode = False
+                    Console.ForegroundColor = ConsoleColor.Green
                     Console.WriteLine("已停用自动修补模式，将恢复二次确认流程")
+                    Console.ForegroundColor = ConsoleColor.White
                     Continue While
             End Select
 
@@ -48,7 +61,9 @@ Module DdsPatcher
         Dim args As String() = ParseCommandLine(input)
 
         If args.Length <> 3 Then
+            Console.ForegroundColor = ConsoleColor.Red
             Console.WriteLine("错误: 需要3个参数 - 源文件路径 修改的DDS路径 DDS序号")
+            Console.ForegroundColor = ConsoleColor.White
             Return
         End If
 
@@ -58,32 +73,42 @@ Module DdsPatcher
 
         ' 验证DDS序号
         If Not Integer.TryParse(args(2), ddsIndex) OrElse ddsIndex < 1 Then
+            Console.ForegroundColor = ConsoleColor.Red
             Console.WriteLine("错误: DDS序号必须是大于0的整数")
+            Console.ForegroundColor = ConsoleColor.White
             Return
         End If
 
         ' 验证文件存在
         If Not File.Exists(sourceFile) Then
+            Console.ForegroundColor = ConsoleColor.Red
             Console.WriteLine($"错误: 源文件不存在 - {sourceFile}")
+            Console.ForegroundColor = ConsoleColor.White
             Return
         End If
 
         If Not File.Exists(modifiedDdsFile) Then
+            Console.ForegroundColor = ConsoleColor.Red
             Console.WriteLine($"错误: 修改的DDS文件不存在 - {modifiedDdsFile}")
+            Console.ForegroundColor = ConsoleColor.White
             Return
         End If
 
         ' 获取文件扩展名
         Dim extension As String = Path.GetExtension(sourceFile).ToLower()
         If extension <> ".afb" AndAlso extension <> ".svo" Then
+            Console.ForegroundColor = ConsoleColor.Red
             Console.WriteLine($"错误: 不支持的文件类型 - {extension} (仅支持 .afb 和 .svo)")
+            Console.ForegroundColor = ConsoleColor.White
             Return
         End If
 
         Try
             PatchDdsFile(sourceFile, modifiedDdsFile, ddsIndex, extension = ".afb")
         Catch ex As Exception
+            Console.ForegroundColor = ConsoleColor.Red
             Console.WriteLine($"修补过程中出错: {ex.Message}")
+            Console.ForegroundColor = ConsoleColor.White
         End Try
     End Sub
 
@@ -96,7 +121,9 @@ Module DdsPatcher
 
         ' 检查请求的DDS索引是否有效
         If ddsIndex > ddsPositions.Count Then
+            Console.ForegroundColor = ConsoleColor.Red
             Console.WriteLine($"错误: 文件中只包含 {ddsPositions.Count} 个DDS文件，无法访问第 {ddsIndex} 个")
+            Console.ForegroundColor = ConsoleColor.White
             Return
         End If
 
@@ -111,25 +138,33 @@ Module DdsPatcher
            modifiedDdsData(1) = DDS_HEADER(1) AndAlso
            modifiedDdsData(2) = DDS_HEADER(2) AndAlso
            modifiedDdsData(3) = DDS_HEADER(3)) Then
+            Console.ForegroundColor = ConsoleColor.Red
             Console.WriteLine("错误: 修改的DDS文件没有有效的DDS头")
+            Console.ForegroundColor = ConsoleColor.White
             Return
         End If
 
         ' 验证大小
         If modifiedDdsData.Length <> targetDds.Length Then
-            Console.WriteLine($"警告: DDS大小不匹配 (原: {targetDds.Length} 字节, 新: {modifiedDdsData.Length} 字节)")
+            Console.ForegroundColor = ConsoleColor.DarkYellow
+            Console.WriteLine($"警告: DDS大小不匹配 (原: {targetDds.Length} 字节, 新: {modifiedDdsData.Length} 字节, 相差 {modifiedDdsData.Length - targetDds.Length} 字节)")
             Console.WriteLine($"原DDS位置: 文件偏移 0x{targetDds.StartOffset:X8}")
+            Console.ForegroundColor = ConsoleColor.White
 
             ' 如果新DDS比原DDS大，直接拒绝
             If modifiedDdsData.Length > targetDds.Length Then
+                Console.ForegroundColor = ConsoleColor.Red
                 Console.WriteLine("错误: 新DDS比原DDS大，无法修补")
+                Console.ForegroundColor = ConsoleColor.White
                 Return
             End If
 
             ' 如果新DDS比原DDS小，根据模式处理
             If Not autoPatchMode Then
                 Console.WriteLine("信息: 检测到新DDS比原DDS小，可尝试使用强制修补")
+                Console.ForegroundColor = ConsoleColor.DarkYellow
                 Console.WriteLine("警告: 强制修补可能会导致问题!")
+                Console.ForegroundColor = ConsoleColor.White
                 Console.WriteLine("是否要使用强制修补? (y/n)")
                 Dim response As String = Console.ReadLine().Trim().ToLower()
 
@@ -139,7 +174,9 @@ Module DdsPatcher
                 End If
 
                 ' 二次确认
+                Console.ForegroundColor = ConsoleColor.Red
                 Console.WriteLine("确定要使用强制修补吗? 这可能会破坏文件结构! (yes/no)")
+                Console.ForegroundColor = ConsoleColor.White
                 Dim confirm As String = Console.ReadLine().Trim().ToLower()
 
                 If confirm <> "yes" Then
@@ -147,7 +184,9 @@ Module DdsPatcher
                     Return
                 End If
             Else
+                Console.ForegroundColor = ConsoleColor.DarkYellow
                 Console.WriteLine("警告：检测到已启用自动修补模式，将跳过二次确认直接进行强制修补！")
+                Console.ForegroundColor = ConsoleColor.White
             End If
         End If
 
@@ -155,14 +194,18 @@ Module DdsPatcher
         Dim backupFile As String = sourceFile & ".bak"
         If Not File.Exists(backupFile) Then
             File.Copy(sourceFile, backupFile)
+            Console.ForegroundColor = ConsoleColor.Green
             Console.WriteLine($"已创建备份文件: {backupFile}")
+            Console.ForegroundColor = ConsoleColor.White
         End If
 
         ' 执行修补
         If modifiedDdsData.Length < targetDds.Length Then
             ' 仅覆盖修改后的DDS部分，保留剩余部分不变
             Array.Copy(modifiedDdsData, 0, sourceData, targetDds.StartOffset, modifiedDdsData.Length)
+            Console.ForegroundColor = ConsoleColor.DarkYellow
             Console.WriteLine($"警告: 仅修补了前 {modifiedDdsData.Length} 字节，保留了原DDS的 {targetDds.Length - modifiedDdsData.Length} 字节未修改")
+            Console.ForegroundColor = ConsoleColor.White
         Else
             ' 完全替换
             Array.Copy(modifiedDdsData, 0, sourceData, targetDds.StartOffset, targetDds.Length)
@@ -170,7 +213,9 @@ Module DdsPatcher
 
         ' 保存修改后的文件
         File.WriteAllBytes(sourceFile, sourceData)
+        Console.ForegroundColor = ConsoleColor.Green
         Console.WriteLine($"成功将第 {ddsIndex} 个DDS修补到 {sourceFile}")
+        Console.ForegroundColor = ConsoleColor.White
     End Sub
 
     Private Function LocateAllDdsFiles(fileData As Byte(), isAfbFile As Boolean) As List(Of DdsInfo)
