@@ -6,23 +6,36 @@ Module DdsPatcher
     ' DDS 文件头标识
     Private ReadOnly DDS_HEADER As Byte() = {&H44, &H44, &H53, &H20} ' "DDS "
     Private ReadOnly POF_MARKER As String = "POF"
+    Private autoPatchMode As Boolean = False
 
     Sub Main()
         Console.WriteLine("DDS 文件修补工具 by ChilorXN.")
         Console.WriteLine("使用说明: 源文件路径 修改的DDS路径 DDS序号(从1开始)")
         Console.WriteLine("示例: ""C:\files\model.afb"" ""C:\modified\dds_1.dds"" 1")
+        Console.WriteLine("输入 'EnableAutoPatch' 跳过二次确认")
+        Console.WriteLine("输入 'DisableAutoPatch' 恢复二次确认")
         Console.WriteLine("输入 'exit' 退出程序")
 
         ' 持续处理循环
         While True
             Console.WriteLine()
+            Console.WriteLine($"当前模式: {(If(autoPatchMode, "自动修补模式（跳过二次确认）", "正常模式"))}")
             Console.Write("> ")
             Dim input As String = Console.ReadLine()
 
-            ' 检查退出命令
-            If input.Trim().ToLower() = "exit" Then
-                Exit While
-            End If
+            ' 检查特殊命令
+            Select Case input.Trim().ToLower()
+                Case "exit"
+                    Exit While
+                Case "enableautopatch"
+                    autoPatchMode = True
+                    Console.WriteLine("已启用自动修补模式，将跳过确认直接进行强制修补！")
+                    Continue While
+                Case "disableautopatch"
+                    autoPatchMode = False
+                    Console.WriteLine("已停用自动修补模式，将恢复二次确认流程")
+                    Continue While
+            End Select
 
             ' 处理输入
             ProcessPatchCommand(input)
@@ -107,8 +120,14 @@ Module DdsPatcher
             Console.WriteLine($"警告: DDS大小不匹配 (原: {targetDds.Length} 字节, 新: {modifiedDdsData.Length} 字节)")
             Console.WriteLine($"原DDS位置: 文件偏移 0x{targetDds.StartOffset:X8}")
 
-            ' 如果新DDS比原DDS小，询问是否强制修补
-            If modifiedDdsData.Length < targetDds.Length Then
+            ' 如果新DDS比原DDS大，直接拒绝
+            If modifiedDdsData.Length > targetDds.Length Then
+                Console.WriteLine("错误: 新DDS比原DDS大，无法修补")
+                Return
+            End If
+
+            ' 如果新DDS比原DDS小，根据模式处理
+            If Not autoPatchMode Then
                 Console.WriteLine("信息: 检测到新DDS比原DDS小，可尝试使用强制修补")
                 Console.WriteLine("警告: 强制修补可能会导致问题!")
                 Console.WriteLine("是否要使用强制修补? (y/n)")
@@ -128,8 +147,7 @@ Module DdsPatcher
                     Return
                 End If
             Else
-                Console.WriteLine("错误: 新DDS比原DDS大，无法修补")
-                Return
+                Console.WriteLine("警告：检测到已启用自动修补模式，将跳过二次确认直接进行强制修补！")
             End If
         End If
 
