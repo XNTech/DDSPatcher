@@ -2,6 +2,7 @@ Imports System
 Imports System.IO
 Imports System.Text
 Imports System.Threading
+Imports System.Diagnostics
 
 Module DdsPatcher
     ' DDS 文件头标识
@@ -9,16 +10,20 @@ Module DdsPatcher
     Private ReadOnly POF_MARKER As String = "POF"
     Private autoPatchMode As Boolean = False
     Private ignoreWarn As Boolean = False
+    Public Const Version As String = "v1.2.2"
+    Dim currentPath As String = AppDomain.CurrentDomain.BaseDirectory
+    Dim targetExePath As String = Path.Combine(currentPath, "DDSExtractor.exe")
 
     Sub Main()
         Console.ForegroundColor = ConsoleColor.DarkCyan
-        Console.WriteLine("DDS 文件修补工具 by ChilorXN.")
+        Console.WriteLine($"DDS 文件修补工具 {Version} by ChilorXN.")
         Console.ForegroundColor = ConsoleColor.DarkYellow
         Console.WriteLine("使用说明: 源文件路径 修改的DDS路径 DDS序号(从1开始)")
         Console.WriteLine("示例: ""C:\files\model.afb"" ""C:\modified\dds_1.dds"" 1")
         Console.ForegroundColor = ConsoleColor.White
         Console.WriteLine("输入 'EnableAutoPatch' 跳过二次确认")
         Console.WriteLine("输入 'DisableAutoPatch' 恢复二次确认")
+        Console.WriteLine("输入 'Extractor' 启动同目录下的DDS提取器")
         Console.WriteLine("输入 'exit' 退出程序")
 
         ' 持续处理循环
@@ -54,6 +59,32 @@ Module DdsPatcher
                     Console.WriteLine("已停用自动修补模式，将恢复二次确认流程")
                     Console.ForegroundColor = ConsoleColor.White
                     Continue While
+                Case "extractor"
+                    Console.WriteLine($"当前路径：{currentPath}")
+                    If File.Exists(targetExePath) Then
+                        Console.ForegroundColor = ConsoleColor.Green
+                        Console.WriteLine("正在启动...")
+                        Console.ForegroundColor = ConsoleColor.White
+                        Try
+                            ' 使用Process启动程序（不等待退出）
+                            Dim processInfo As New ProcessStartInfo() With {
+                                .FileName = targetExePath,
+                                .UseShellExecute = True  ' 使用Shell执行可以避免阻塞
+                            }
+
+                            Process.Start(processInfo)
+                            Console.WriteLine("已尝试启动DDSExtractor")
+                        Catch ex As Exception
+                            Console.ForegroundColor = ConsoleColor.Red
+                            Console.WriteLine($"启动DDS提取器时出错：{ex.Message}")
+                            Console.ForegroundColor = ConsoleColor.White
+                        End Try
+                    Else
+                        Console.ForegroundColor = ConsoleColor.Red
+                        Console.WriteLine("错误：在当前目录下未找到DDSExtractor.exe，请确认您是否已经将其放入DDSPatcher所在的文件夹内")
+                        Console.ForegroundColor = ConsoleColor.White
+                    End If
+                    Continue While
                 Case "ignorewarn"
                     ignoreWarn = True
                     Console.ForegroundColor = ConsoleColor.Red
@@ -74,15 +105,16 @@ Module DdsPatcher
                     Thread.Sleep(3000)
                     Console.Clear()
                     Continue While
-                Case "help"
+                Case "help", "about", "version"
                     Console.ForegroundColor = ConsoleColor.DarkCyan
-                    Console.WriteLine("DDS 文件修补工具 by ChilorXN.")
+                    Console.WriteLine($"DDS 文件修补工具 {Version} by ChilorXN.")
                     Console.ForegroundColor = ConsoleColor.DarkYellow
                     Console.WriteLine("使用说明: 源文件路径 修改的DDS路径 DDS序号(从1开始)")
                     Console.WriteLine("示例: ""C:\files\model.afb"" ""C:\modified\dds_1.dds"" 1")
                     Console.ForegroundColor = ConsoleColor.White
                     Console.WriteLine("输入 'EnableAutoPatch' 跳过二次确认")
                     Console.WriteLine("输入 'DisableAutoPatch' 恢复二次确认")
+                    Console.WriteLine("输入 'Extractor' 启动同目录下的DDS提取器(若有)")
                     Console.WriteLine("输入 'clear' 清空屏幕")
                     Console.WriteLine("输入 'reset' 重置设定")
                     Console.WriteLine("输入 'help' 再次查看帮助")
