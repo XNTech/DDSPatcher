@@ -32,7 +32,8 @@ Module DdsPatcher
             If autoPatchMode Then
                 If Not ignoreWarn Then
                     Console.ForegroundColor = ConsoleColor.DarkYellow
-                    Console.WriteLine("已启用自动修补模式，将跳过确认直接进行强制修补！若您没有使用该功能的必要，请使用 'DisableAutoPatch' 关闭该功能")
+                    Console.WriteLine("已启用自动修补模式，将跳过确认直接进行强制修补！")
+                    Console.WriteLine("若您没有使用该功能的必要，请使用 'DisableAutoPatch' 命令关闭该功能")
                 End If
                 Console.ForegroundColor = ConsoleColor.Red
             Else
@@ -45,7 +46,7 @@ Module DdsPatcher
 
             ' 检查特殊命令
             Select Case input.Trim().ToLower()
-                Case "exit"
+                Case "exit", "quit"
                     Exit While
                 Case "enableautopatch"
                     autoPatchMode = True
