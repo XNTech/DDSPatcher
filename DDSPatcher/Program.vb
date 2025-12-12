@@ -15,6 +15,21 @@ Module DdsPatcher
     Dim targetExePath As String = Path.Combine(currentPath, "DDSExtractor.exe")
 
     Sub Main()
+    ' 检查是否有命令行参数
+    Dim commandLineArgs As String() = Environment.GetCommandLineArgs()
+    
+    ' 如果有参数（第一个参数是程序自身路径）
+    If commandLineArgs.Length > 1 Then
+        ' 跳过程序自身路径参数
+        Dim args As String() = New String(commandLineArgs.Length - 2) {}
+        Array.Copy(commandLineArgs, 1, args, 0, args.Length)
+        
+        ' 处理命令行参数模式
+        ProcessCommandLineArgs(args)
+        Return
+    End If
+    
+    ' 原有的交互模式代码...
         Console.ForegroundColor = ConsoleColor.DarkCyan
         Console.WriteLine($"DDS 文件修补工具 {Version} by ChilorXN.")
         Console.ForegroundColor = ConsoleColor.DarkYellow
@@ -129,6 +144,62 @@ Module DdsPatcher
 
         Console.WriteLine("程序已退出")
     End Sub
+
+Private Sub ProcessCommandLineArgs(args As String())
+    If args.Length <> 3 Then
+        Console.ForegroundColor = ConsoleColor.Red
+        Console.WriteLine("错误: 需要3个参数 - 源文件路径 修改的DDS路径 DDS序号")
+        Console.WriteLine("用法: DDSPatcher.exe ""源文件路径"" ""修改的DDS路径"" 序号")
+        Console.ForegroundColor = ConsoleColor.White
+        Return
+    End If
+
+    Dim sourceFile As String = args(0)
+    Dim modifiedDdsFile As String = args(1)
+    Dim ddsIndex As Integer
+
+    ' 验证DDS序号
+    If Not Integer.TryParse(args(2), ddsIndex) OrElse ddsIndex < 1 Then
+        Console.ForegroundColor = ConsoleColor.Red
+        Console.WriteLine("错误: DDS序号必须是大于0的整数")
+        Console.ForegroundColor = ConsoleColor.White
+        Return
+    End If
+
+    ' 验证文件存在
+    If Not File.Exists(sourceFile) Then
+        Console.ForegroundColor = ConsoleColor.Red
+        Console.WriteLine($"错误: 源文件不存在 - {sourceFile}")
+        Console.ForegroundColor = ConsoleColor.White
+        Return
+    End If
+
+    If Not File.Exists(modifiedDdsFile) Then
+        Console.ForegroundColor = ConsoleColor.Red
+        Console.WriteLine($"错误: 修改的DDS文件不存在 - {modifiedDdsFile}")
+        Console.ForegroundColor = ConsoleColor.White
+        Return
+    End If
+
+    ' 获取文件扩展名
+    Dim extension As String = Path.GetExtension(sourceFile).ToLower()
+    If extension <> ".afb" AndAlso extension <> ".svo" Then
+        Console.ForegroundColor = ConsoleColor.Red
+        Console.WriteLine($"错误: 不支持的文件类型 - {extension} (仅支持 .afb 和 .svo)")
+        Console.ForegroundColor = ConsoleColor.White
+        Return
+    End If
+
+    Try
+        ' 在命令行模式下自动启用自动修补模式
+        autoPatchMode = True
+        PatchDdsFile(sourceFile, modifiedDdsFile, ddsIndex, extension = ".afb")
+    Catch ex As Exception
+        Console.ForegroundColor = ConsoleColor.Red
+        Console.WriteLine($"修补过程中出错: {ex.Message}")
+        Console.ForegroundColor = ConsoleColor.White
+    End Try
+End Sub
 
     Private Sub ProcessPatchCommand(input As String)
         Dim args As String() = ParseCommandLine(input)
