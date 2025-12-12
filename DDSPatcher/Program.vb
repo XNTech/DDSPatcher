@@ -10,7 +10,7 @@ Module DdsPatcher
     Private ReadOnly POF_MARKER As String = "POF"
     Private autoPatchMode As Boolean = False
     Private ignoreWarn As Boolean = False
-    Public Const Version As String = "v1.2.2"
+    Public Const Version As String = "v1.3.1"
     Dim currentPath As String = AppDomain.CurrentDomain.BaseDirectory
     Dim targetExePath As String = Path.Combine(currentPath, "DDSExtractor.exe")
 
@@ -35,6 +35,9 @@ Module DdsPatcher
         Console.ForegroundColor = ConsoleColor.DarkYellow
         Console.WriteLine("使用说明: 源文件路径 修改的DDS路径 DDS序号(从1开始)")
         Console.WriteLine("示例: ""C:\files\model.afb"" ""C:\modified\dds_1.dds"" 1")
+        Console.ForegroundColor = ConsoleColor.Green
+        Console.WriteLine("* 现已支持直接通过命令行调用！")
+        Console.WriteLine("* 尝试在bat文件中使用<DDSPatcher.exe路径> <源文件路径> <DDS文件路径> <序号>来批量处理多个afb/svo文件吧")
         Console.ForegroundColor = ConsoleColor.White
         Console.WriteLine("输入 'EnableAutoPatch' 跳过二次确认")
         Console.WriteLine("输入 'DisableAutoPatch' 恢复二次确认")
@@ -127,6 +130,8 @@ Module DdsPatcher
                     Console.ForegroundColor = ConsoleColor.DarkYellow
                     Console.WriteLine("使用说明: 源文件路径 修改的DDS路径 DDS序号(从1开始)")
                     Console.WriteLine("示例: ""C:\files\model.afb"" ""C:\modified\dds_1.dds"" 1")
+                    Console.ForegroundColor = ConsoleColor.Green
+                    Console.WriteLine("或直接通过命令提示符调用: <DDSPatcher.exe路径> <源文件路径> <DDS文件路径> <序号>")
                     Console.ForegroundColor = ConsoleColor.White
                     Console.WriteLine("输入 'EnableAutoPatch' 跳过二次确认")
                     Console.WriteLine("输入 'DisableAutoPatch' 恢复二次确认")
