@@ -1,4 +1,4 @@
-<img width="96" height="128" alt="Override" src="https://github.com/user-attachments/assets/51a5d8f0-f98d-4786-ae90-17f49cdd18b4" />
+<img width="96" height="128" alt="Override" src="https://github.com/user-attachments/assets/b11a7596-9e1d-4f49-a5d2-a9ef0834e7c0" />
 
 # DDSPatcher
 Patch the Modified DDS Image into the Original .afb or .svo file(s).
